@@ -34,7 +34,7 @@ sleep 2
 
 # Bật chế độ quét
 bluetoothctl scan on &
-sleep 5
+sleep 10
 kill -2 $!
 echo "🕐 Đang quét... Vui lòng đợi một chút."
 
@@ -52,10 +52,29 @@ bluetoothctl scan off
 echo "🔵 Đã tắt chế độ quét."
 
 # Ghép đôi và kết nối lại
+# Ghép đôi với thiết bị
 bluetoothctl pair $MAC
+
+# Kiểm tra nếu lệnh ghép đôi thành công
+PAIR_STATUS=$(bluetoothctl info $MAC | grep "Pairing successful")
+
+if [ -n "$PAIR_STATUS" ]; then
+    echo "✅ Đã ghép đôi thành công với thiết bị."
+else
+    echo "❌ Ghép đôi thất bại. Dừng script."
+    exit 1  # Dừng script nếu ghép đôi thất bại
+fi
 bluetoothctl trust $MAC
 bluetoothctl connect $MAC
 
+# Kết nối Bluetooth
+CONNECT_OUTPUT=$(bluetoothctl connect $MAC 2>&1)
+
+# Kiểm tra lỗi trong quá trình kết nối
+if echo "$CONNECT_OUTPUT" | grep -qi "Failed"; then
+    echo "🛑 Tool lỗi, vui lòng thử lại."
+    exit 1  # Dừng script nếu có lỗi
+fi
 # Kiểm tra kết nối sau khi ghép đôi
 CONNECTED=$(bluetoothctl info $MAC | grep "Connected: yes")
 if [ -n "$CONNECTED" ]; then
@@ -63,6 +82,16 @@ if [ -n "$CONNECTED" ]; then
 else
     echo "❌ Không thể kết nối với DualShock 4."
 fi
+
+sleep 1
+DISCOVERING=$(bluetoothctl show | grep "Discovering" | awk '{print $2}')
+
+if [ "$DISCOVERING" = "no" ]; then
+    echo "✅ Đã ngừng tìm kiếm Bluetooth, có thể sử dụng."
+else
+    echo "🔄 Vẫn đang tìm kiếm Bluetooth, vui lòng chạy lại."
+fi
+
 ```
 
 ### 3. **Cấp Quyền Thực Thi cho Script**
