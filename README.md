@@ -67,14 +67,6 @@ fi
 bluetoothctl trust $MAC
 bluetoothctl connect $MAC
 
-# Kết nối Bluetooth
-CONNECT_OUTPUT=$(bluetoothctl connect $MAC 2>&1)
-
-# Kiểm tra lỗi trong quá trình kết nối
-if echo "$CONNECT_OUTPUT" | grep -qi "Failed"; then
-    echo "🛑 Tool lỗi, vui lòng thử lại."
-    exit 1  # Dừng script nếu có lỗi
-fi
 # Kiểm tra kết nối sau khi ghép đôi
 CONNECTED=$(bluetoothctl info $MAC | grep "Connected: yes")
 if [ -n "$CONNECTED" ]; then
